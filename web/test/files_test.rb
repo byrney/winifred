@@ -3,7 +3,7 @@ require 'test_helper'
 require 'files'
 
 
-class FileBrowserTest < MiniTest::Unit::TestCase
+class FileBrowserTest < Minitest::Test
 
     def setup()
         this_dir = File.dirname(__FILE__)
@@ -12,9 +12,10 @@ class FileBrowserTest < MiniTest::Unit::TestCase
 
     def check_items(items)
         items.each do |entry|
-            assert(File.exists?(entry[:query]))
+            abs_path = File.join(@test_dir, entry[:query])
+            assert(File.exists?(abs_path))
             expected_action = nil
-            if(File.directory?(entry[:query]))
+            if(File.directory?(abs_path))
                 expected_action = "self"
             end
             assert_equal(expected_action, entry[:action])
@@ -42,10 +43,18 @@ class FileBrowserTest < MiniTest::Unit::TestCase
         end
     end
 
+    def test_path_treated_as_relative()
+        subject = FileBrowser.new(@test_dir, nil)
+        result = subject.exec('subfolder')
+        refute_nil(result)
+        assert_equal("menu", result[:type])
+        check_items(result[:body])
+    end
+
     def test_with_valid_dir_items_are_sane()
         puts "TestDir=" + @test_dir
         dbg = FileBrowser.new(@test_dir, nil)
-        result = dbg.exec(File.join(@test_dir, "subfolder"))
+        result = dbg.exec("subfolder")
         refute_nil(result)
         assert_equal("menu", result[:type])
         check_items(result[:body])
@@ -53,7 +62,7 @@ class FileBrowserTest < MiniTest::Unit::TestCase
 
     def test_current_dir_not_as_dot_in_listing()
         dbg = FileBrowser.new(@test_dir, nil)
-        result = dbg.exec(File.join(@test_dir, "subfolder"), nil)
+        result = dbg.exec("subfolder")
         refute_nil(result)
         assert_equal("menu", result[:type])
         items = result[:body]
@@ -66,7 +75,7 @@ class FileBrowserTest < MiniTest::Unit::TestCase
         subject.batch_size = batch
         item_count = 0
         position = nil
-        folder = File.join(@test_dir, "subfolder10")
+        folder =  "subfolder10"
         loop do
             result = subject.exec(folder, position)
             refute_nil(result)
@@ -82,30 +91,34 @@ class FileBrowserTest < MiniTest::Unit::TestCase
 end
 
 
-class FileActionsTest < MiniTest::Unit::TestCase
+class FileActionsTest < Minitest::Test
 
     def setup()
         this_dir = File.dirname(__FILE__)
         @test_dir = File.join(this_dir, "test_folder")
-        @valid_file = File.join(@test_dir, "normal_file.txt")
+        @valid_file = "normal_file.txt"
     end
 
     def test_can_create()
-        p = FileActions.new(nil, nil)
+        p = FileActions.new(@test_dir, nil)
         refute_nil(p)
     end
 
     def test_can_exec()
-        p = FileActions.new(nil, nil)
+        p = FileActions.new(@test_dir, nil)
         refute_nil(p)
         res = p.exec(@valid_file)
         assert_equal("menu", res[:type])
     end
 
+    def test_download_returns_absolute_path()
+
+    end
+
 end
 
 
-class TailTest < MiniTest::Unit::TestCase
+class TailTest < Minitest::Test
     def setup()
         @subject = Tail.new(nil, nil)
         this_dir = File.dirname(__FILE__)

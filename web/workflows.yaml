@@ -24,7 +24,7 @@ file:
   :subtitle: File Component
   :inputs: :required
   :implementation: FileActions
-  :spec: /Users/rob/Documents/Source/home/minimal-rack
+  :spec: /Users/rob
   :query: ''
 awsmenu:
   :uid: aws

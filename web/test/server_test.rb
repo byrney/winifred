@@ -9,7 +9,7 @@ require 'pp'
 require 'json'
 
 
-class ServerUnitTests < MiniTest::Unit::TestCase
+class ServerUnitTests < Minitest::Test
     include Rack::Test::Methods
 
     @@component = {"debug" => {:uid => "debug", :query => 'de/bug', :title => "diagnostics", :subtitle => "Debug Component", :implementation => "Debug", :spec => nil}}

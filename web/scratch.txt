@@ -1,0 +1,15 @@
+
+export_pass = params[export_pass]
+username = params[username]
+pubkey = params[pubkey]
+
+unless pubkey
+	pubkey = create_pubkey
+	privkey = create_privkey
+end
+
+client_cert = create_certificate( username, pubkey )
+signed_cert = sign_certificate( client_cert )
+response = create_pkcs12( export_pass, username @ winifred, privkey, signed_cert )
+save_cert( username, signed_cert )
+

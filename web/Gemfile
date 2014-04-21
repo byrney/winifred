@@ -5,9 +5,8 @@ gem 'minitest-reporters', '>= 0.14.0', :group => :test
 gem "rack-test", :require => "rack/test", :group => :test
 gem 'minitest', :group=>:test
 
-gem 'rake', "~>10.1.0"
-#gem 'thin', "~>1.5.1"
-gem 'rack', "~>1.5.2"
+gem 'rake'
+#gem 'thin'
+gem 'rack'
 gem 'json'
-
-
+gem 'pry', :group => :test

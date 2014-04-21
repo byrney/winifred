@@ -2,14 +2,14 @@ require 'rake/testtask'
 
 desc "CITest_Ruby: run CHECK-IN tests"
 Rake::TestTask.new(:citest) do |t|
+        t.libs << 'components'
         t.libs << 'test'
         t.libs << '.'
         t.test_files = FileList["test/*_test.rb"]
 end
 
 
-desc "sync files to robs virtual build machine for build"
 task :server => [:citest] do
-    %x(ruby -I . server.rb)
+    exec("ruby", "-I.:components", "server.rb")
 end
 

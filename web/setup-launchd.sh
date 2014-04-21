@@ -5,7 +5,9 @@ function install()
     installdir=$( pwd )
     ruby=$(which ruby)
 
-    cat << EOM > $HOME/Library/LaunchAgents/com.rpbyrne.winifred.plist
+	plist="$HOME/Library/LaunchAgents/com.rpbyrne.winifred.plist"
+
+    cat << EOM > "$plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC -//Apple Computer//DTD PLIST 1.0//EN http://www.apple.com/DTDs/PropertyList-1.0.dtd >
 <plist version="1.0">
@@ -30,7 +32,7 @@ function install()
 EOM
 
     remove
-    launchctl load $HOME/Library/LaunchAgents/com.rpbyrne.winifred.plist
+    launchctl load "$plist"
     status
 }
 

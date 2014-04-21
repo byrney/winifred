@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'debug'
 
-class DebugTest < MiniTest::Unit::TestCase
+class DebugTest < Minitest::Test
     def test_can_create()
         dbg = Debug.new(nil, nil)
         refute_nil(dbg)

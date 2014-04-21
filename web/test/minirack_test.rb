@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'minirack'
 
-class MinimalRackUnitTests < MiniTest::Unit::TestCase
+class MinimalRackUnitTests < Minitest::Test
     include Rack::Test::Methods
 
     @@names = ["debug", "browse", "actions"]

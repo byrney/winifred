@@ -5,6 +5,7 @@ require 'pagebuilder'
 require 'json'
 require 'components'
 require 'yaml'
+require 'pry'
 
 class MiniRack
 

@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'process'
 
-class ProcessTestSetup < MiniTest::Unit::TestCase
+class ProcessTestSetup < Minitest::Test
 
     def setup()
         @this_pid = Process.pid
@@ -80,6 +80,7 @@ class ProcessActionsTests < ProcessTestSetup
         query = @running_process.to_s + ":TERM"
         res = @subject.exec(query, nil)
         assert_equal("html", res[:type])
+        Kernel.sleep(1)
         assert_equal(@running_process, Process.waitpid(@running_process, Process::WNOHANG))  # check it's finished
     end
 

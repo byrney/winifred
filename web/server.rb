@@ -6,6 +6,7 @@ require 'json'
 require 'components'
 require 'minirack'
 require 'webrick/https'
+require 'openssl'
 
 class MobileApp
     def self.call(env)
@@ -20,46 +21,41 @@ class MobileApp
 end
 
 def authenticate(username, password)
-    system("dscl", ".", "-authonly", username, password)
+    return true
+    #system("dscl", ".", "-authonly", username, password)
 end
 
 def build_api(components_yaml)
-
     api = MiniRack.new(components_yaml)
-    # api.component_add("debug", :inputs => :optional, :uid => "debug", :arg => '', :implementation => "Debug", :spec => nil,
-    #                   :title => "Diagnostics", :subtitle => "Debug Component", :icon => 'icons/UtilitiesFolder.png')
-    # api.component_add("browse", :uid => "browse", :inputs => :optional, :arg => '', :default_action => "file", :implementation => "FileBrowser", :spec => Dir.home,
-    #                   :title => "Home", :icon => 'icons/user-home.png', :subtitle => "Browse home directory (#{Dir.home})")
-    # api.component_add("file", :uid => "file", :arg => '', :inputs => :required, :implementation => "FileActions", :spec => Dir.getwd(),
-    #                   :title => "Files", :subtitle => "File Component" )
-    # api.component_add("awsmenu", :uid => "aws", :arg => '', :default_action => 'awsopen', :inputs => :optional, :implementation => "ScriptFilter",
-    #                   :spec => {:interpreter => '/bin/bash', :script => '$HOME/Documents/Alfred2/Alfred.alfredpreferences/workflows/user.workflow.649D603E-4AC3-4559-84AE-6B040EF1A214/xmlfilter.sh'},
-    #                   :icon => 'icons/aws.png', :title => "Amazon Console", :subtitle => "Open Amazon AWS Console" )
-    # api.component_add("awsopen", :uid => "awsopen", :arg => '', :inputs => :required, :implementation => "OpenUrl",
-    #                   :spec => {:template => "https://console.aws.amazon.com/{query}/home"},
-    #                   :title => "Amazon Console URL", :subtitle => "Open Amazon AWS URL" )
-    # api.component_add("iTunesApp", :uid => "iTunesApp", :inputs => :optional, :implementation => "ApplicationControl", :spec => {:process_name => "iTunes"},
-    #                   :title => "iTunes Application Control", :subtitle => "Start/Stop iTunes.app", :icon => "icons/iTunes.png")
-    # api.component_add("periodic", :uid => "periodic", :arg => '-f',  :inputs => :none, :implementation => "ScriptFileAction",
-    #                   :spec => {:interpreter => '/bin/bash', :script => '/Users/rob/.periodic'},
-    #                   :title => "Periodic Jobs", :subtitle => "Force run periodic", :icon => "icons/Awaken.png" )
-    # api.component_add("periodiclog", :uid => "periodiclog", :arg => '/Users/rob/Library/Logs/periodic.log', :inputs => :none, :implementation => "Tail",
-    #                   :title => "Periodic Logs", :subtitle => "tail periodic logs", :icon => "icons/Schedule_File.png" )
-    # api.component_add("tail", :uid => "tail", :inputs => :require, :implementation => "Tail",
-    #                   :title => "Tail", :subtitle => "tail", :icon => "icons/Schedule_File.png" )
-
     return api
 end
 
-def create_stack(api)
+class ClientCertAuth
 
+    def initialize(application)
+        puts "CLientCertAuth:init"
+        @app = application
+    end
+
+    def call(env)
+        client_cert_raw = env['SSL_CLIENT_CERT']
+        client_cert = OpenSSL::X509::Certificate.new(client_cert_raw)
+        store = OpenSSL::X509::Store.new
+        cacert = OpenSSL::X509::Certificate.new(File.read("security/ca/winifred-ca-cert.pem"))
+        store.add_cert(cacert)
+        if( store.verify(client_cert) )
+            puts "Certificate login by #{client_cert.subject}"
+            return @app.call(env)
+        else
+            return [403, {}, ["Client certificate failed to verify"]]
+        end
+    end
+end
+
+def create_stack(api)
     stack = Rack::Builder.new() do
         env = ENV['RACK_ENV']
-        if(env != 'test')
-            use Rack::Auth::Basic do |username, password|
-                authenticate(username, password)
-            end
-        end
+        use ClientCertAuth unless env == 'test'
         map '/api' do
             run api
         end
@@ -68,8 +64,20 @@ def create_stack(api)
         end
         run Rack::File.new('public')
     end
-
     return stack
+end
+
+def start_thin_ssl()
+
+    options = {:environment => :development, :port => port, :address => '0.0.0.0',
+               :ssl => true, :ssl_key_file => 'ssl/localhost-key.pem', :ssl_cert_file => 'ssl/localhost-chain.pem',
+               :ssl_verify => true, :log => 'logs.txt'}
+    thin = Thin::Server.new('0.0.0.0', 8433, options, create_stack(api))
+    thin.ssl = true
+    thin.ssl_options = { :private_key_file => options[:ssl_key_file], :cert_chain_file => options[:ssl_cert_file],
+                         :verify_peer => options[:ssl_verify] }
+    pp thin
+    thin.start
 end
 
 if $0 == __FILE__
@@ -77,8 +85,21 @@ if $0 == __FILE__
     config = File.read("workflows.yaml")
     api = build_api(config)
     puts api.dump()
-    Rack::Handler::WEBrick.run(create_stack(api), :Port => 8443, :SSLEnable => false, :SSLCertName => cert_name)
-    #Rack::Server.start(:app => create_stack(), :environment => :development)
+    port = 8433
+    #Rack::Handler::WEBrick.run(create_stack(api), :Port => 8443, :SSLEnable => false, :SSLCertName => cert_name)
+    $0 = "winifred -port #{port}"
+
+    #    Thin::Server.start('0.0.0.0', 8433, create_stack(api), options)
+    server_certificate = OpenSSL::X509::Certificate.new( File.open("security/server/laura-chain.pem").read)
+    private_key = OpenSSL::PKey::RSA.new( File.open("security/server/laura-key-np.pem").read)
+    Rack::Server.start(:app => create_stack(api), :environment => :development, :Port => port,
+                       :SSLEnable => true,
+                       :SSLVerifyClient => OpenSSL::SSL::VERIFY_PEER|OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT,
+                       :SSLPrivateKey => private_key,
+                       :SSLCertificate => server_certificate,
+                       :SSLCACertificateFile => 'security/ca/winifred-ca-cert.pem',
+                       :SSLCertName => cert_name,
+                      )
 end
 
 

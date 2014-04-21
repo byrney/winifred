@@ -2,7 +2,7 @@ require 'test_helper'
 require 'scripts'
 
 
-class ScriptActionTest < MiniTest::Unit::TestCase
+class ScriptActionTest < Minitest::Test
     def setup()
         @subject = ScriptAction.new({:interpreter => '/bin/bash', :script => "echo -n"}, nil)
     end
@@ -14,7 +14,7 @@ class ScriptActionTest < MiniTest::Unit::TestCase
     end
 end
 
-class ScriptFileTest < MiniTest::Unit::TestCase
+class ScriptFileTest < Minitest::Test
     def setup()
         this_dir = File.dirname(__FILE__)
         test_dir = File.join(this_dir, "test_folder")
@@ -38,7 +38,7 @@ class ScriptFileTest < MiniTest::Unit::TestCase
     end
 end
 
-class ScriptFilterTest < MiniTest::Unit::TestCase
+class ScriptFilterTest < Minitest::Test
 
     @@aws_script_output = <<-END
         <?xml version'1.0' ?>
