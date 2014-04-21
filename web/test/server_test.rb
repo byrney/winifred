@@ -61,7 +61,7 @@ class ServerUnitTests < Minitest::Test
 
 
     def test_returns_public_files()
-        response = get('/jqm.dex.css', {}, 'rack.session' => @session)
+        response = get('/winifred-mobile.css', {}, 'rack.session' => @session)
         assert_equal(200, response.status)
     end
 

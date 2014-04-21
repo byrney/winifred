@@ -10,10 +10,10 @@ function customizeHeader(page)
     // updatethe title using the page propertiues
     // var page_title = page.attr("data-dexhdr-title")
     // if(typeof page_title == "string") {
-    //     page.find(".dex-page-title").text(page_title)
+    //     page.find(".winifred-page-title").text(page_title)
     // }
     // remove this page from the menu in the header
-    var menu = page.find(".dex-page-menu")
+    var menu = page.find(".winifred-page-menu")
     pageId = page.attr("id")
     query = "a[href='#"+pageId+"']"
     menu.find(query).parents("li").hide()
@@ -29,7 +29,7 @@ $(document).on("pageinit", "#component", function(e) {
 var refreshTimer = 0
 
 $(document).on("click", "a", function(e){
-    at = $(this).attr("data-dex-ref")
+    at = $(this).attr("data-winifred-ref")
     if(at) {
         page = $(".ui-page-active")
         navigate(page, at)
@@ -96,8 +96,8 @@ function empty_result(result) {
 }
 
 function processResponse(page, response, dataref, append ) {
-    res = page.find(".dex-component-output")
-    list = page.find(".dex-component-menu")
+    res = page.find(".winifred-component-output")
+    list = page.find(".winifred-component-menu")
     var result = JSON.parse(response)
     result_type = result["type"]
     // if url then navigte to it and leave this page as is
@@ -106,7 +106,7 @@ function processResponse(page, response, dataref, append ) {
         window.location.href = result["body"]
         return false
     }
-    append || page.find(".dex-page-title").text(result["title"])
+    append || page.find(".winifred-page-title").text(result["title"])
     // if menu hide res show list and construct
     if(result_type == "menu") {
         if(!append) {
@@ -146,7 +146,7 @@ function processResponse(page, response, dataref, append ) {
         // reset the filter
         $.mobile.loading('hide')
         // update the refresh button to point at the current reference
-        page.find(".dex-page-refresh").attr("data-dex-ref", dataref)
+        page.find(".winifred-page-refresh").attr("data-winifred-ref", dataref)
     }
     return false
 }
@@ -161,13 +161,13 @@ function createItemReference(item) {
 
 function constructItemLink(item, ref) {
     link = $("<a>")
-    // if item has href link goes direct and no dex-data
+    // if item has href link goes direct and no winifred-data
     if(item["href"] && item["href"].length) {
         href = item["href"] + "?query=" + item["query"]
         link.attr("href", href).attr("data-ajax", "false")
     }
     else { // use dex data-ref an no href
-        link.attr("href",'#').attr('data-dex-ref',ref)
+        link.attr("href",'#').attr('data-winifred-ref',ref)
     }
     // create the content of the link
     iconpath = item["icon"] ? item["icon"] : "icons/ToolbarAdvanced.png"
@@ -211,9 +211,9 @@ function filterReset(page) {
     page.find('input[data-type="search"]').val("")
 }
 
-$(document).on("click", "a.dex-filter-toggle", filterToggle);
+$(document).on("click", "a.winifred-filter-toggle", filterToggle);
 
-$(document).on("click", "a.dex-home-link", function(e){
+$(document).on("click", "a.winifred-home-link", function(e){
         page = $(".ui-page-active")
         home(page)
         return false

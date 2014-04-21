@@ -65,7 +65,7 @@ class MiniRack
             env["PATH_INFO"] = query
             return @getter.call(env)
         when "/NO_CONTEXT"
-            cookie_query = request.cookies()["DexContext"]
+            cookie_query = request.cookies()["WinifredContext"]
             path,query = cookie_query.split('&',2)
             return self.process(path, query, nil, request, env)
         else
@@ -73,7 +73,7 @@ class MiniRack
             return [404, {}, ["Not found: path"]] unless result
         end
         headers = {}
-        Rack::Utils.set_cookie_header!(headers, "DexContext", {:value => [path, query], :path => "/"})
+        Rack::Utils.set_cookie_header!(headers, "WinifredContext", {:value => [path, query], :path => "/"})
         return [200, headers, [result.to_json()]]
     end
 
