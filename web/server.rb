@@ -85,7 +85,7 @@ if $0 == __FILE__
     config = File.read("workflows.yaml")
     api = build_api(config)
     puts api.dump()
-    port = 8433
+    port = 8444
     #Rack::Handler::WEBrick.run(create_stack(api), :Port => 8443, :SSLEnable => false, :SSLCertName => cert_name)
     $0 = "winifred -port #{port}"
 
