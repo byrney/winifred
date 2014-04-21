@@ -1,0 +1,99 @@
+---
+debug:
+  :uid: debug
+  :title: Diagnostics
+  :subtitle: Debug Component
+  :icon: icons/UtilitiesFolder.png
+  :inputs: :optional
+  :implementation: Debug
+  :spec:
+  :query: ''
+browse:
+  :uid: browse
+  :title: Home
+  :subtitle: Browse home directory (/Users/rob)
+  :icon: icons/user-home.png
+  :inputs: :optional
+  :implementation: FileBrowser
+  :spec: /Users/rob
+  :query: ''
+  :default_action: file
+file:
+  :uid: file
+  :title: Files
+  :subtitle: File Component
+  :inputs: :required
+  :implementation: FileActions
+  :spec: /Users/rob/Documents/Source/home/minimal-rack
+  :query: ''
+awsmenu:
+  :uid: aws
+  :title: Amazon Console
+  :subtitle: Open Amazon AWS Console
+  :icon: icons/aws.png
+  :inputs: :optional
+  :implementation: ScriptFilter
+  :spec:
+    :interpreter: /bin/bash
+    :script: $HOME/Documents/Alfred2/Alfred.alfredpreferences/workflows/user.workflow.649D603E-4AC3-4559-84AE-6B040EF1A214/xmlfilter.sh
+  :query: ''
+  :default_action: awsopen
+awsopen:
+  :uid: awsopen
+  :title: Amazon Console URL
+  :subtitle: Open Amazon AWS URL
+  :inputs: :required
+  :implementation: OpenUrl
+  :spec: https://console.aws.amazon.com/{query}/home
+  :query: ''
+iTunesApp:
+  :uid: iTunesApp
+  :title: iTunes Application Control
+  :subtitle: Start/Stop iTunes.app
+  :icon: icons/iTunes.png
+  :inputs: :optional
+  :implementation: ApplicationControl
+  :spec: iTunes
+periodic:
+  :uid: periodic
+  :title: Periodic Jobs
+  :subtitle: Force run periodic
+  :icon: icons/Awaken.png
+  :query: -f
+  :inputs: :optional
+  :implementation: ScriptFileAction
+  :spec:
+    :interpreter: /bin/bash
+    :script: /Users/rob/.periodic
+periodiclog:
+  :uid: periodiclog
+  :title: Periodic Logs
+  :subtitle: tail periodic logs
+  :icon: icons/Schedule_File.png
+  :query: /Users/rob/Library/Logs/periodic.log
+  :inputs: :required
+  :implementation: Tail
+tail:
+  :uid: tail
+  :title: Tail
+  :subtitle: tail
+  :icon: icons/Schedule_File.png
+  :inputs: :required
+  :implementation: Tail
+processlist:
+  :uid: processlist
+  :title: Processes
+  :subtitle: List Processes
+  :icon: icons/process.png
+  :inputs: :optional
+  :implementation: ProcessList
+  :default_action: processactions
+  :spec: ppid,stime,uid,gid
+processactions:
+  :uid: processactions
+  :title: Send Signal to Process
+  :subtitle: List Processes
+  :icon: icons/process.png
+  :inputs: :required
+  :implementation: ProcessActions
+  :default_action: self

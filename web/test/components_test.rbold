@@ -1,0 +1,222 @@
+require 'test_helper'
+require 'components'
+
+class DebugTest < MiniTest::Unit::TestCase
+    def test_can_create()
+        dbg = Debug.new(nil, nil)
+        refute_nil(dbg)
+    end
+
+    def test_ignores_unknown_params()
+        dbg = Debug.new(nil, nil)
+        result = dbg.exec("unknown_parameter", nil)
+        assert_nil(result)
+    end
+
+    def test_no_params_returns_menu()
+        dbg = Debug.new(nil, nil)
+        result = dbg.exec({}, nil)
+        assert_equal("menu", result[:type])
+    end
+
+    def test_each_menu_item_returns_results()
+        expected_env = {"item1" => "value1"}
+        dbg = Debug.new(nil, expected_env)
+        result = dbg.exec({}, nil)
+        assert_equal("menu", result[:type])
+        items = result[:items]
+        args = items.collect {|x| x[:query] }
+        args.each {|a| assert_equal("html", dbg.exec(a)[:type]) }
+    end
+end
+
+
+class FileBrowserTest < MiniTest::Unit::TestCase
+
+    def setup()
+        this_dir = File.dirname(__FILE__)
+        @test_dir = File.join(this_dir, "test_folder")
+    end
+
+    def check_items(items)
+        items.each do |entry|
+            assert(File.exists?(entry[:query]))
+            expected_action = nil
+            if(File.directory?(entry[:query]))
+                expected_action = "self"
+            end
+            assert_equal(expected_action, entry[:action])
+
+        end
+    end
+    def test_root_folder_with_no_query()
+        dbg = FileBrowser.new(@test_dir, nil)
+        refute_nil(dbg)
+        result = dbg.exec({})
+        assert_equal("menu", result[:type])
+        items = result[:items]
+        check_items(items)
+    end
+
+    def test_can_create()
+        dbg = FileBrowser.new(@test_dir, nil)
+        refute_nil(dbg)
+    end
+
+    def test_unknown_paths_still_return_a_result()
+        dbg = FileBrowser.new("/xyznonexistentdirectory", nil)
+        result = dbg.exec({})
+        refute_nil(result)
+        assert_equal("failed", result[:status])
+    end
+
+    def test_with_valid_dir_items_are_sane()
+        puts "TestDir=" + @test_dir
+        dbg = FileBrowser.new(@test_dir, nil)
+        result = dbg.exec(File.join(@test_dir, "subfolder"))
+        refute_nil(result)
+        assert_equal("menu", result[:type])
+        check_items(result[:items])
+    end
+
+    def test_current_dir_not_as_dot_in_listing()
+        dbg = FileBrowser.new(@test_dir, nil)
+        result = dbg.exec(File.join(@test_dir, "subfolder"), nil)
+        refute_nil(result)
+        assert_equal("menu", result[:type])
+        items = result[:items]
+        items.each { |v| refute_equal(".", v[:title]) }
+    end
+
+end
+
+
+class FileActionsTest < MiniTest::Unit::TestCase
+
+    def setup()
+        this_dir = File.dirname(__FILE__)
+        @test_dir = File.join(this_dir, "test_folder")
+        @valid_file = File.join(@test_dir, "normal_file.txt")
+    end
+
+    def test_can_create()
+        p = FileActions.new(nil, nil)
+        refute_nil(p)
+    end
+
+    def test_can_exec()
+        p = FileActions.new(nil, nil)
+        refute_nil(p)
+        res = p.exec(@valid_file)
+        assert_equal("menu", res[:type])
+    end
+
+end
+
+
+class ScriptActionTest < MiniTest::Unit::TestCase
+    def setup()
+        @subject = ScriptAction.new({:interpreter => '/bin/bash', :script => "echo -n"}, nil)
+    end
+
+    def test_echo_results()
+        expected = "output string"
+        res = @subject.exec(expected)
+        assert_equal("<pre>#{expected}</pre>", res[:body])
+    end
+end
+
+class ScriptFileTest < MiniTest::Unit::TestCase
+    def setup()
+        this_dir = File.dirname(__FILE__)
+        test_dir = File.join(this_dir, "test_folder")
+        test_script = File.join(test_dir, "slow_script.sh")
+        @subject = ScriptFileAction.new({:interpreter => '/bin/bash', :script => test_script}, nil)
+    end
+
+    def test_echo_goes_to_logfile()
+        expected = "output string"
+        res = @subject.exec(expected)
+        assert_equal("menu", res[:type])
+        logfile = res[:items].first[:query]
+        pp "logfile = " + logfile
+        tries = 5
+        until tries <= 0 || File.size(logfile) > 0 do
+            sleep(1)
+            tries -= 1
+        end
+        File.open(logfile) { |f| assert_equal(expected, f.read())
+        }
+    end
+end
+
+class ScriptFilterTest < MiniTest::Unit::TestCase
+
+    @@aws_script_output = <<-END
+        <?xml version'1.0' ?>
+        <items>
+          <item uid="r53" arg="route53" autocomplete="r53" > <title>Amazon r53 Console</title> <subtitle>Route 53 DNS</subtitle> <icon >route53.png</icon> </item>
+          <item uid="ec2" arg="ec2" autocomplete="ec2" > <title>Amazon EC2 Console</title> <subtitle>Elastic Compute</subtitle> <icon >ec2.png</icon> </item>
+          <item uid="iam" arg="iam" autocomplete="iam" > <title>Amazon IAM Console</title> <subtitle>Identity Management</subtitle> <icon >iam.png</icon> </item>
+          <item uid="vpc" arg="vpc" autocomplete="vpc" > <title>Amazon VPC Console</title> <subtitle>Virtual Provate Cloud</subtitle> <icon >vpc.png</icon> </item>
+          <item uid="rds" arg="rds" autocomplete="rds" > <title>Amazon RDS Console</title> <subtitle>Relational Database</subtitle> <icon >rds.png</icon> </item>
+        </items>
+    END
+
+    @@invalid_xml_outpit = <<-END
+        error: this is not valid xml
+    END
+
+    def setup()
+        @subject = ScriptFilter.new({:interpreter => '/bin/bash', :script => "echo -n"}, nil)
+    end
+
+    def test_process_xml_results()
+        output = @@aws_script_output
+        success = true
+        query = "whatever"
+        res = @subject.process_script_output(query, output, success)
+        assert_equal("menu", res[:type])
+        assert_equal(5, res[:items].size)
+        first = res[:items].first
+        assert_equal("Amazon r53 Console", first[:title])
+        assert_equal("Route 53 DNS", first[:subtitle])
+        assert_equal("route53.png", first[:icon])
+        assert_equal("route53", first[:query])
+    end
+
+    def test_invalid_xml()
+        output = @@invalid_xml_outpit
+        success = true
+        query = "whatever"
+        assert_raises(RuntimeError) do
+            @subject.process_script_output(query, output, success)
+        end
+    end
+
+end
+
+
+class TailTest < MiniTest::Unit::TestCase
+    def setup()
+        @subject = Tail.new(nil, nil)
+        this_dir = File.dirname(__FILE__)
+        @test_dir = File.join(this_dir, "test_folder")
+        @short_file = File.join(@test_dir, "normal_file.txt")
+    end
+
+    def test_nil_query()
+        assert_raises(RuntimeError) { @subject.exec(nil, nil) }
+    end
+
+    def test_invalid_filename()
+        assert_raises(RuntimeError) { @subject.exec('/file/that/does/not/exist.txt', nil) }
+    end
+    def test_short_file()
+        resp = @subject.exec(@short_file, nil)
+        refute_nil(resp)
+        assert_equal(File.size(@short_file), resp[:position], "tail should haave read to the end and returned the file size")
+        pp resp
+    end
+
+end

@@ -1,0 +1,5 @@
+
+* specialize the header for each page
+* make back buttons work
+* Test a component that goes > 2 leveks deep
+
