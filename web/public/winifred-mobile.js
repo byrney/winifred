@@ -68,7 +68,7 @@ function getApiData(page, dataref, append, position) {
         type: "GET",
         url: url,
         async: true,
-        error: function(jqxhr, error, ex) { alert("failed to get " + url) },
+        error: function(jqxhr, error, ex) { stopRefresh() ; alert("failed to get " + url) },
         success: function(response,textStatus, jqxhr){ processResponse(page, response, dataref, append)}
     });
 }
