@@ -1,8 +1,0 @@
-V	161203115553Z		D22378FCAD2E7D82	unknown	/C=GB/ST=London/O=Robert Byrne/CN=byrnemail.org/emailAddress=robert@byrnemail.org
-V	141204120537Z		D22378FCAD2E7D83	unknown	/C=GB/ST=England/L=London/O=Winifred/CN=laura.lan/emailAddress=robert@byrnemail.org
-V	141204212319Z		D22378FCAD2E7D84	unknown	/C=GB/ST=England/L=London/O=Winifred/CN=localhost
-V	141205135507Z		D22378FCAD2E7D85	unknown	/C=AU/ST=Some-State/O=rob/CN=blah
-V	140603230042Z		D22378FCAD2E7D86	unknown	/C=GB/ST=London/O=Robert Byrne/OU=Company client certificate/CN=byrnemail.org/emailAddress=robert@byrnemail.org
-V	140604151233Z		D22378FCAD2E7D87	unknown	/C=GB/ST=London/O=Robert Byrne/OU=Winifred Client Certificate/CN=roberto@winifred.app/emailAddress=robert@byrnemail.org
-V	141207132646Z		D22378FCAD2E7D88	unknown	/C=GB/ST=London/O=Winifred @ Laura/CN=laura/emailAddress=robert@byrnemail.org
-V	141207134825Z		D22378FCAD2E7D89	unknown	/C=GB/ST=London/O=Robs Iphone/CN=robsphone/emailAddress=robert@byrnemail.org
